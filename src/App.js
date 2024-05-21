@@ -1,11 +1,16 @@
 import React, { useEffect, useReducer } from "react";
 import Header from "./Header";
 import Main from "./Main";
+import Loader from "./Loader";
+import Error from "./Error";
+import StartScreen from "./StartScreen";
+import Question from "./Question";
 
 function App() {
   const initialState = {
     questions: [],
     status: "loading",
+    index: 0,
   };
   function reducer(state, action) {
     switch (action.type) {
@@ -13,12 +18,14 @@ function App() {
         return { ...state, questions: action.payload, status: "ready" };
       case "dataFailed":
         return { ...state, status: "error" };
+      case "start":
+        return { ...state, status: "active" };
       default:
         throw new Error("Action unknown");
     }
   }
-  const [state, dispatch] = useReducer(reducer, initialState);
-
+  const [{ questions, status, index }, dispatch] = useReducer(reducer, initialState);
+  const numQuestions = questions.length;
   //Using useEffect to set the title of the document
   useEffect(() => {
     document.title = "The React Quiz";
@@ -33,7 +40,12 @@ function App() {
   return (
     <div className="App">
       <Header />
-      <Main></Main>
+      <Main>
+        {status === "loading" && <Loader />}
+        {status === "error" && <Error />}
+        {status === "ready" && <StartScreen numQuestions={numQuestions} dispatch={dispatch} />}
+        {status === "active" && <Question question={questions[index]} />}
+      </Main>
     </div>
   );
 }

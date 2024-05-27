@@ -5,7 +5,8 @@ import Loader from "./Loader";
 import Error from "./Error";
 import StartScreen from "./StartScreen";
 import Question from "./Question";
-
+import NextButton from "./NextButton";
+import Progress from "./Progress";
 function App() {
   const initialState = {
     questions: [],
@@ -25,13 +26,16 @@ function App() {
       case "newAnswer":
         const question = state.questions.at(state.index);
         return { ...state, answer: action.payload, points: action.payload === question.correctOption ? state.points + question.points : state.points };
-
+      case "nextQuestion":
+        return { ...state, index: state.index + 1, answer: null };
       default:
         throw new Error("Action unknown");
     }
   }
-  const [{ questions, status, index, answer }, dispatch] = useReducer(reducer, initialState);
+  const [{ questions, status, index, answer, points }, dispatch] = useReducer(reducer, initialState);
   const numQuestions = questions.length;
+  const maxPoints = questions.reduce((acc, question) => acc + question.points, 0);
+
   //Using useEffect to set the title of the document
   useEffect(() => {
     document.title = "The React Quiz";
@@ -50,7 +54,13 @@ function App() {
         {status === "loading" && <Loader />}
         {status === "error" && <Error />}
         {status === "ready" && <StartScreen numQuestions={numQuestions} dispatch={dispatch} />}
-        {status === "active" && <Question question={questions[index]} dispatch={dispatch} answer={answer} />}
+        {status === "active" && (
+          <>
+            <Progress index={index} numQuestions={numQuestions} points={points} maxPoints={maxPoints} />
+            <Question question={questions[index]} dispatch={dispatch} answer={answer} />
+            {answer !== null && <NextButton dispatch={dispatch} />}
+          </>
+        )}
       </Main>
     </div>
   );
